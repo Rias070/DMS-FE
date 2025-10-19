@@ -1,0 +1,62 @@
+import { BrowserRouter as Router, Routes, Route } from "react-router";
+import SignIn from "./pages/AuthPages/SignIn";
+import SignUp from "./pages/AuthPages/SignUp";
+import NotFound from "./pages/OtherPage/NotFound";
+import UserProfiles from "./pages/UserProfiles";
+// Chart pages disabled (kept in repo but not routed)
+import Calendar from "./pages/Calendar";
+import BasicTables from "./pages/Tables/BasicTables";
+import FormElements from "./pages/Forms/FormElements";
+import Blank from "./pages/Blank";
+import AppLayout from "./layout/AppLayout";
+import Inbox from "./pages/Inbox/Inbox";
+import { ScrollToTop } from "./components/common/ScrollToTop";
+import Home from "./pages/Dashboard/Home";
+import Products from "./pages/Ecommerce/Products";
+import Orders from "./pages/Ecommerce/Orders";
+import Customers from "./pages/Ecommerce/Customers";
+import CustomerDetails from "./pages/Ecommerce/CustomerDetails";
+
+export default function App() {
+  return (
+    <>
+      <Router>
+        <ScrollToTop />
+        <Routes>
+          {/* Dashboard Layout */}
+          <Route element={<AppLayout />}>
+            <Route index path="/" element={<Home />} />
+
+            {/* Others Page */}
+            <Route path="/profile" element={<UserProfiles />} />
+            <Route path="/calendar" element={<Calendar />} />
+            <Route path="/blank" element={<Blank />} />
+
+            {/* Forms */}
+            <Route path="/form-elements" element={<FormElements />} />
+
+            {/* Tables */}
+            <Route path="/basic-tables" element={<BasicTables />} />
+
+            {/* Ui Elements removed */}
+            <Route path="/inbox" element={<Inbox />} />
+
+            {/* Charts removed from routes */}
+            {/* Ecommerce */}
+            <Route path="/ecommerce/products" element={<Products />} />
+            <Route path="/ecommerce/orders" element={<Orders />} />
+            <Route path="/ecommerce/customers" element={<Customers />} />
+            <Route path="/ecommerce/customers/:id" element={<CustomerDetails />} />
+          </Route>
+
+          {/* Auth Layout */}
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+
+          {/* Fallback Route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Router>
+    </>
+  );
+}
