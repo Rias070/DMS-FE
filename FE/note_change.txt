@@ -1,1 +1,11 @@
 Do copy paste từ repo BE FE nên mất hết lịch sử thay đổi code
+
+Các thay đổi là:
+-services/authServices.ts
+-types/auth.ts
+-add ROLE_USAGE_GUIDE
+-add pages/example/RoleExamplePage
+-add hooks/useRole.ts
+-context/AuthContext.tsx
+-add components/auth/ProtectedRoute.tsx
+-add components/auth/RoleGuard.tsx
