@@ -16,6 +16,7 @@ import Products from "./pages/Ecommerce/Products";
 import Orders from "./pages/Ecommerce/Orders";
 import Customers from "./pages/Ecommerce/Customers";
 import CustomerDetails from "./pages/Ecommerce/CustomerDetails";
+import TestDriveManagement from "./pages/TestDrive/TestDriveManagement";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
@@ -55,6 +56,16 @@ export default function App() {
             <Route path="/ecommerce/orders" element={<Orders />} />
             <Route path="/ecommerce/customers" element={<Customers />} />
             <Route path="/ecommerce/customers/:id" element={<CustomerDetails />} />
+
+            {/* Test Drive Management - Only for Dealer roles */}
+            <Route 
+              path="/test-drive" 
+              element={
+                <ProtectedRoute requiredRoles={['DealerAdmin', 'DealerStaff']}>
+                  <TestDriveManagement />
+                </ProtectedRoute>
+              } 
+            />
           </Route>
 
           {/* Auth Layout - Public Routes */}
