@@ -16,15 +16,23 @@ import Products from "./pages/Ecommerce/Products";
 import Orders from "./pages/Ecommerce/Orders";
 import Customers from "./pages/Ecommerce/Customers";
 import CustomerDetails from "./pages/Ecommerce/CustomerDetails";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 export default function App() {
   return (
-    <>
+    <AuthProvider>
       <Router>
         <ScrollToTop />
         <Routes>
-          {/* Dashboard Layout */}
-          <Route element={<AppLayout />}>
+          {/* Dashboard Layout - Protected Routes */}
+          <Route 
+            element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route index path="/" element={<Home />} />
 
             {/* Others Page */}
@@ -49,7 +57,7 @@ export default function App() {
             <Route path="/ecommerce/customers/:id" element={<CustomerDetails />} />
           </Route>
 
-          {/* Auth Layout */}
+          {/* Auth Layout - Public Routes */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
 
@@ -57,6 +65,6 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
-    </>
+    </AuthProvider>
   );
 }
