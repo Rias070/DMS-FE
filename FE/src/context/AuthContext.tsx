@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
   login: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   loading: boolean;
   // Role checking methods
   hasRole: (role: string) => boolean;
@@ -53,8 +53,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoggedIn(true);
   };
 
-  const logout = () => {
-    authService.logout();
+  const logout = async () => {
+    try {
+      await authService.logoutWithAPI();
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Continue with local logout even if API fails
+      authService.logout();
+    }
     setUser(null);
     setIsLoggedIn(false);
   };

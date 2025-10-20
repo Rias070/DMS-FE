@@ -3,15 +3,24 @@ export interface LoginRequest {
   password: string;
 }
 
-// Backend API response structure
-export interface LoginResponse {
+// Backend API response structure - matches your ApiResponse<object> format
+export interface ApiResponse<T> {
   success: boolean;
   message: string;
+  data: T;
+  errors?: string[];
+}
+
+// Login response data structure
+export interface LoginResponseData {
   userId: string;
   token: string;
   refreshToken: string;
-  roles: string[]; // Array of role names from backend
+  roles: string[];
 }
+
+// Complete login response from backend
+export interface LoginResponse extends ApiResponse<LoginResponseData> {}
 
 // User object stored in localStorage and context
 export interface User {
