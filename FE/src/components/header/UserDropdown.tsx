@@ -17,10 +17,17 @@ export default function UserDropdown() {
     setIsOpen(false);
   }
 
-  function handleLogout() {
-    logout();
-    navigate("/signin");
-    closeDropdown();
+  async function handleLogout() {
+    try {
+      await logout();
+      navigate("/signin");
+      closeDropdown();
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still navigate to signin even if logout fails
+      navigate("/signin");
+      closeDropdown();
+    }
   }
   return (
     <div className="relative">
