@@ -1,5 +1,5 @@
 Do copy paste từ repo BE FE nên mất hết lịch sử thay đổi code
-
+*19/10/2025
 Các thay đổi là:
 -services/authServices.ts
 -types/auth.ts
@@ -9,3 +9,6 @@ Các thay đổi là:
 -context/AuthContext.tsx
 -add components/auth/ProtectedRoute.tsx
 -add components/auth/RoleGuard.tsx
+*20/10/2025
+-Thêm chức năng đặt lịch hẹn lái thử
+-thêm phân quyền cho các chức năng hiện có

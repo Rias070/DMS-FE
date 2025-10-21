@@ -5,13 +5,16 @@ import { LoginRequest, User } from '../types/auth';
 class AuthService {
   // Tài khoản dev để test (không cần backend)
   private readonly DEV_ACCOUNTS = [
-    { username: 'dev', password: 'dev123' },
-    // Test accounts từ database
-    { username: 'davidjohnson', password: '123456' },
-    { username: 'johnsmith', password: '123456' },
-    { username: 'sarahw', password: 'pass123' },
-    { username: 'michaelg', password: 'securepass' },
-    { username: 'emmabrown', password: 'password1' }
+    // Company Roles
+    { username: 'companyadmin', password: 'admin123', role: 'CompanyAdmin', name: 'Nguyễn Văn A - Admin Hãng' },
+    { username: 'companystaff', password: 'staff123', role: 'CompanyStaff', name: 'Trần Thị B - Nhân viên Hãng' },
+    
+    // Dealer Roles
+    { username: 'dealeradmin', password: 'admin123', role: 'DealerAdmin', name: 'Lê Văn C - Quản lý Đại lý' },
+    { username: 'dealerstaff', password: 'staff123', role: 'DealerStaff', name: 'Phạm Thị D - Nhân viên Đại lý' },
+    
+    // Legacy dev account
+    { username: 'dev', password: 'dev123', role: 'CompanyAdmin', name: 'Developer' },
   ];
 
   // Đăng nhập và lưu thông tin user vào localStorage
@@ -24,12 +27,12 @@ class AuthService {
       
       if (devAccount) {
         const devUser: User = {
-          id: devAccount.username === 'dev' ? 'dev-001' : `user-${devAccount.username}`,
+          id: `${devAccount.role.toLowerCase()}-${devAccount.username}`,
           username: devAccount.username,
-          name: devAccount.username === 'dev' ? 'Developer' : devAccount.username,
-          email: devAccount.username === 'dev' ? 'dev@example.com' : `${devAccount.username}@example.com`,
+          name: (devAccount as any).name || devAccount.username,
+          email: `${devAccount.username}@example.com`,
           isActive: true,
-          roles: devAccount.username === 'dev' ? ['CompanyAdmin'] : ['DealerAdmin'], 
+          roles: [(devAccount as any).role || 'DealerAdmin'],
           token: `dev-token-${devAccount.username}`,
           refreshToken: `dev-refresh-token-${devAccount.username}`
         };
@@ -38,7 +41,7 @@ class AuthService {
         localStorage.setItem('user', JSON.stringify(devUser));
         localStorage.setItem('isLoggedIn', 'true');
         
-        console.log(`Dev/Test account login successful: ${devAccount.username}`);
+        console.log(`✅ Test account login successful: ${devAccount.username} (${devUser.roles[0]})`);
         return devUser;
       }
 
