@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
@@ -12,20 +12,27 @@ import AppLayout from "./layout/AppLayout";
 import Inbox from "./pages/Inbox/Inbox";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
+import RoleBasedHome from "./pages/Home/RoleBasedHome";
 import Products from "./pages/Ecommerce/Products";
 import Orders from "./pages/Ecommerce/Orders";
 import Customers from "./pages/Ecommerce/Customers";
 import CustomerDetails from "./pages/Ecommerce/CustomerDetails";
 import TestDriveManagement from "./pages/TestDrive/TestDriveManagement";
 import { AuthProvider } from "./context/AuthContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 export default function App() {
   return (
     <AuthProvider>
-      <Router>
+      <NotificationProvider>
+        <Router>
         <ScrollToTop />
         <Routes>
+          {/* Auth Layout - Public Routes */}
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+
           {/* Dashboard Layout - Protected Routes */}
           <Route 
             element={
@@ -34,7 +41,7 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route index path="/" element={<Home />} />
+            <Route index path="/" element={<RoleBasedHome />} />
 
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
@@ -68,14 +75,11 @@ export default function App() {
             />
           </Route>
 
-          {/* Auth Layout - Public Routes */}
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </Router>
+        </Router>
+      </NotificationProvider>
     </AuthProvider>
   );
 }
