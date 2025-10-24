@@ -27,8 +27,9 @@ export const API_ENDPOINTS = {
     GET_BY_ID: (id: string) => `${API_BASE_URL}/Vehicles/${id}`,
   },
   DEALERS: {
-    BASE: `${API_BASE_URL}/Dealers`,
-    GET_ALL: `${API_BASE_URL}/Dealers`,
-    GET_BY_ID: (id: string) => `${API_BASE_URL}/Dealers/${id}`,
+    BASE: `${API_BASE_URL}/dealer`,
+    GET_ALL: `${API_BASE_URL}/dealer`,
+    GET_ACTIVE: `${API_BASE_URL}/dealer/active`,
+    GET_BY_ID: (id: string) => `${API_BASE_URL}/dealer/${id}`,
   },
 };

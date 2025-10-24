@@ -17,7 +17,8 @@ import Products from "./pages/Ecommerce/Products";
 import Orders from "./pages/Ecommerce/Orders";
 import Customers from "./pages/Ecommerce/Customers";
 import CustomerDetails from "./pages/Ecommerce/CustomerDetails";
-import TestDriveManagement from "./pages/TestDrive/TestDriveManagement";
+import TestDrivePage from "./pages/TestDrive/TestDrivePage";
+import UserManagement from "./pages/UserManagement";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -69,7 +70,17 @@ export default function App() {
               path="/test-drive" 
               element={
                 <ProtectedRoute requiredRoles={['DealerAdmin', 'DealerStaff']}>
-                  <TestDriveManagement />
+                  <TestDrivePage />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* User Management - Only for Company Admin */}
+            <Route 
+              path="/user-management" 
+              element={
+                <ProtectedRoute requiredRoles={['CompanyAdmin']}>
+                  <UserManagement />
                 </ProtectedRoute>
               } 
             />
