@@ -52,7 +52,7 @@ const navItems: NavItem[] = [
   },
   {
     icon: <UserCircleIcon />,
-    name: "User Management",
+    name: "Manage Users",
     path: "/user-management",
     roles: ['CompanyAdmin'], // Only for Company Admin
   },
