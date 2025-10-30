@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
@@ -12,28 +12,19 @@ import AppLayout from "./layout/AppLayout";
 import Inbox from "./pages/Inbox/Inbox";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
-import RoleBasedHome from "./pages/Home/RoleBasedHome";
 import Products from "./pages/Ecommerce/Products";
 import Orders from "./pages/Ecommerce/Orders";
 import Customers from "./pages/Ecommerce/Customers";
 import CustomerDetails from "./pages/Ecommerce/CustomerDetails";
-import TestDrivePage from "./pages/TestDrive/TestDrivePage";
-import UserManagement from "./pages/UserManagement";
 import { AuthProvider } from "./context/AuthContext";
-import { NotificationProvider } from "./context/NotificationContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 export default function App() {
   return (
     <AuthProvider>
-      <NotificationProvider>
-        <Router>
+      <Router>
         <ScrollToTop />
         <Routes>
-          {/* Auth Layout - Public Routes */}
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-
           {/* Dashboard Layout - Protected Routes */}
           <Route 
             element={
@@ -42,7 +33,7 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route index path="/" element={<RoleBasedHome />} />
+            <Route index path="/" element={<Home />} />
 
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
@@ -64,33 +55,16 @@ export default function App() {
             <Route path="/ecommerce/orders" element={<Orders />} />
             <Route path="/ecommerce/customers" element={<Customers />} />
             <Route path="/ecommerce/customers/:id" element={<CustomerDetails />} />
-
-            {/* Test Drive Management - Only for Dealer roles */}
-            <Route 
-              path="/test-drive" 
-              element={
-                <ProtectedRoute requiredRoles={['DealerAdmin', 'DealerStaff']}>
-                  <TestDrivePage />
-                </ProtectedRoute>
-              } 
-            />
-
-            {/* User Management - Only for Company Admin */}
-            <Route 
-              path="/user-management" 
-              element={
-                <ProtectedRoute requiredRoles={['CompanyAdmin']}>
-                  <UserManagement />
-                </ProtectedRoute>
-              } 
-            />
           </Route>
+
+          {/* Auth Layout - Public Routes */}
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
 
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-        </Router>
-      </NotificationProvider>
+      </Router>
     </AuthProvider>
   );
 }

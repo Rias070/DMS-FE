@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router";
 
 // Assume these icons are imported from an icon library
 import {
@@ -16,14 +16,12 @@ import {
   UserCircleIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
-import { useAuth } from "../context/AuthContext";
 
 type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
-  roles?: string[]; // Required roles to view this menu item
 };
 const navItems: NavItem[] = [
   {
@@ -43,18 +41,6 @@ const navItems: NavItem[] = [
       { name: "Billing", path: "/ecommerce/billing", pro: false },
       { name: "Invoice", path: "/ecommerce/invoice", pro: false },
     ],
-  },
-  {
-    icon: <CalenderIcon />,
-    name: "Test Drive",
-    path: "/test-drive",
-    roles: ['DealerAdmin', 'DealerStaff'], // Only for Dealer roles
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "Manage Users",
-    path: "/user-management",
-    roles: ['CompanyAdmin'], // Only for Company Admin
   },
   {
     icon: <CalenderIcon />,
@@ -104,7 +90,6 @@ const othersItems: NavItem[] = [
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
-  const { hasAnyRole } = useAuth();
   const location = useLocation();
 
   const [openSubmenu, setOpenSubmenu] = useState<{
@@ -173,13 +158,7 @@ const AppSidebar: React.FC = () => {
 
   const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
     <ul className="flex flex-col gap-4">
-      {items.map((nav, index) => {
-        // Check if user has required roles to view this menu item
-        if (nav.roles && !hasAnyRole(nav.roles)) {
-          return null; // Don't render if user doesn't have required roles
-        }
-        
-        return (
+      {items.map((nav, index) => (
         <li key={nav.name}>
           {nav.subItems ? (
             <button
@@ -296,8 +275,7 @@ const AppSidebar: React.FC = () => {
             </div>
           )}
         </li>
-        );
-      })}
+      ))}
     </ul>
   );
 

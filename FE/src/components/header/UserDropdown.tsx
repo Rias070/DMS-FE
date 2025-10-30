@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 
 export default function UserDropdown() {
@@ -17,17 +17,10 @@ export default function UserDropdown() {
     setIsOpen(false);
   }
 
-  async function handleLogout() {
-    try {
-      await logout();
-      navigate("/signin");
-      closeDropdown();
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Still navigate to signin even if logout fails
-      navigate("/signin");
-      closeDropdown();
-    }
+  function handleLogout() {
+    logout();
+    navigate("/signin");
+    closeDropdown();
   }
   return (
     <div className="relative">
