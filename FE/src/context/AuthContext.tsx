@@ -66,22 +66,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoggedIn(false);
   };
 
-  // Kiểm tra user có role cụ thể không
+  // Normalize: treat Manager roles as equivalent to Admin roles
+  const roleAliases: Record<string, string[]> = {
+    CompanyAdmin: ['CompanyAdmin', 'CompanyManager'],
+    CompanyManager: ['CompanyManager', 'CompanyAdmin'],
+    DealerAdmin: ['DealerAdmin', 'DealerManager'],
+    DealerManager: ['DealerManager', 'DealerAdmin'],
+  };
+
+  const matchRole = (userRoles: string[], requiredRole: string): boolean => {
+    const equivalents = roleAliases[requiredRole] || [requiredRole];
+    return equivalents.some(r => userRoles.includes(r));
+  };
+
+  // Kiểm tra user có role cụ thể không (with alias support)
   const hasRole = (role: string): boolean => {
     if (!user || !user.roles) return false;
-    return user.roles.includes(role);
+    return matchRole(user.roles, role);
   };
 
-  // Kiểm tra user có bất kỳ role nào trong danh sách không
+  // Kiểm tra user có bất kỳ role nào trong danh sách không (with alias support)
   const hasAnyRole = (roles: string[]): boolean => {
     if (!user || !user.roles) return false;
-    return roles.some(role => user.roles.includes(role));
+    return roles.some(role => matchRole(user.roles, role));
   };
 
-  // Kiểm tra user có tất cả roles trong danh sách không
+  // Kiểm tra user có tất cả roles trong danh sách không (with alias support)
   const hasAllRoles = (roles: string[]): boolean => {
     if (!user || !user.roles) return false;
-    return roles.every(role => user.roles.includes(role));
+    return roles.every(role => matchRole(user.roles, role));
   };
 
   // Shortcut để kiểm tra Admin (CompanyAdmin hoặc DealerAdmin)

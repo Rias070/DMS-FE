@@ -33,3 +33,45 @@ export const API_ENDPOINTS = {
     GET_BY_ID: (id: string) => `${API_BASE_URL}/dealer/${id}`,
   },
 };
+
+// Lightweight fetch-based API wrapper (axios-like minimal)
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+
+async function request<T = any>(
+  method: HttpMethod,
+  url: string,
+  body?: any,
+  init?: RequestInit
+): Promise<{ data: T }>
+{
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+  const resp = await fetch(fullUrl, {
+    method,
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      ...(init?.headers || {}),
+    },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+    ...init,
+  });
+
+  const contentType = resp.headers.get('content-type') || '';
+  const payload = contentType.includes('application/json') ? await resp.json() : await resp.text();
+
+  if (!resp.ok) {
+    const message = (payload && (payload.message || payload.error)) || resp.statusText;
+    throw new Error(message);
+  }
+
+  return { data: payload as T };
+}
+
+export const api = {
+  get: <T = any>(url: string, init?: RequestInit) => request<T>('GET', url, undefined, init),
+  post: <T = any>(url: string, body?: any, init?: RequestInit) => request<T>('POST', url, body, init),
+  put: <T = any>(url: string, body?: any, init?: RequestInit) => request<T>('PUT', url, body, init),
+  delete: <T = any>(url: string, init?: RequestInit) => request<T>('DELETE', url, undefined, init),
+  patch: <T = any>(url: string, body?: any, init?: RequestInit) => request<T>('PATCH', url, body, init),
+};

@@ -31,6 +31,7 @@ export const useRole = () => {
    * @returns true nếu user có ít nhất 1 role trong danh sách
    */
   const canAccess = (allowedRoles: string[] | UserRole[]): boolean => {
+    // Use context hasAnyRole which already supports alias mapping
     return hasAnyRole(allowedRoles as string[]);
   };
 
@@ -52,6 +53,7 @@ export const useRole = () => {
    * Kiểm tra user có role cụ thể không
    */
   const checkHasRole = (role: string | UserRole): boolean => {
+    // Context hasRole already supports alias mapping
     return hasRole(role as string);
   };
 
@@ -59,6 +61,7 @@ export const useRole = () => {
    * Kiểm tra user có tất cả roles không
    */
   const checkHasAllRoles = (roles: string[] | UserRole[]): boolean => {
+    // Context hasAllRoles already supports alias mapping
     return hasAllRoles(roles as string[]);
   };
 
@@ -66,14 +69,16 @@ export const useRole = () => {
    * Kiểm tra user có phải CompanyAdmin không
    */
   const isCompanyAdmin = (): boolean => {
-    return hasRole(UserRole.CompanyAdmin);
+    // CompanyAdmin base = CompanyAdmin or CompanyManager
+    return hasRole(UserRole.CompanyAdmin) || hasRole(UserRole.CompanyManager);
   };
 
   /**
    * Kiểm tra user có phải DealerAdmin không
    */
   const isDealerAdmin = (): boolean => {
-    return hasRole(UserRole.DealerAdmin);
+    // DealerAdmin base = DealerAdmin or DealerManager
+    return hasRole(UserRole.DealerAdmin) || hasRole(UserRole.DealerManager);
   };
 
   /**

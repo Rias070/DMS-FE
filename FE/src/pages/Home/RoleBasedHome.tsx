@@ -6,7 +6,7 @@ import DealerAdminHome from './DealerAdminHome';
 import DealerStaffHome from './DealerStaffHome';
 
 const RoleBasedHome: React.FC = () => {
-  const { isCompanyAdmin, isDealerAdmin, isStaff } = useRole();
+  const { isCompanyAdmin, isDealerAdmin, isStaff, hasRole } = useRole();
 
   // CompanyAdmin - Highest priority
   if (isCompanyAdmin()) {
@@ -21,7 +21,6 @@ const RoleBasedHome: React.FC = () => {
   // Staff roles (CompanyStaff or DealerStaff)
   if (isStaff()) {
     // Check if it's CompanyStaff or DealerStaff
-    const { hasRole } = useRole();
     if (hasRole('CompanyStaff')) {
       return <CompanyStaffHome />;
     } else {

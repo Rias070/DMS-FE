@@ -39,5 +39,7 @@ export enum UserRole {
   CompanyAdmin = 'CompanyAdmin',
   CompanyStaff = 'CompanyStaff',
   DealerAdmin = 'DealerAdmin',
-  DealerStaff = 'DealerStaff'
+  DealerStaff = 'DealerStaff',
+  CompanyManager = 'CompanyManager',
+  DealerManager = 'DealerManager'
 }
