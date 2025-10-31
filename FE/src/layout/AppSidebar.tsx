@@ -51,6 +51,12 @@ const navItems: NavItem[] = [
     roles: ['DealerAdmin', 'DealerStaff'], // Only for Dealer roles
   },
   {
+    icon: <BoxCubeIcon />,
+    name: "Restock",
+    path: "/restock-management",
+    roles: ['DealerAdmin', 'DealerManager'], // Only for Dealer Admin/Manager
+  },
+  {
     icon: <UserCircleIcon />,
     name: "Manage Users",
     path: "/user-management",

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import { vehicleService } from "../../services/vehicleService";
+import { api } from "../../config/api";
+import authService from "../../services/authService";
 import { Vehicle, VehicleCreateUpdate } from "../../types/vehicle";
 import { VehicleFormModal } from "../../components/ecommerce/VehicleFormModal";
 import { ConfirmDeleteModal } from "../../components/ecommerce/ConfirmDeleteModal";
@@ -42,6 +44,12 @@ export default function Products() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  // Restock modal
+  const [isRestockOpen, setIsRestockOpen] = useState(false);
+  const [restockVehicle, setRestockVehicle] = useState<Vehicle | null>(null);
+  const [restockQty, setRestockQty] = useState<string>("1");
+  const [restockDesc, setRestockDesc] = useState<string>("");
+  const [restockSubmitting, setRestockSubmitting] = useState(false);
   
   // Toast notification state
   const [notification, setNotification] = useState<{
@@ -171,6 +179,55 @@ export default function Products() {
   const handleDeleteClick = (vehicle: Vehicle) => {
     setSelectedVehicle(vehicle);
     setIsDeleteModalOpen(true);
+  };
+
+  const handleOpenRestock = (vehicle: Vehicle) => {
+    setRestockVehicle(vehicle);
+    setRestockQty("1");
+    setRestockDesc("");
+    setIsRestockOpen(true);
+  };
+
+  const handleSubmitRestock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!restockVehicle) return;
+    const qtyNum = parseInt(restockQty, 10);
+    if (!qtyNum || qtyNum <= 0) {
+      setNotification({ type: "error", message: "Số lượng phải lớn hơn 0" });
+      return;
+    }
+    // Validate vehicleId is GUID (BE expects Guid)
+    const vehicleId = restockVehicle.id;
+    const guidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
+    if (!vehicleId || !guidRegex.test(vehicleId)) {
+      setNotification({ type: "error", message: "VehicleId không hợp lệ" });
+      return;
+    }
+    try {
+      setRestockSubmitting(true);
+      const currentUser = authService.getCurrentUser();
+      await api.post(
+        "/RestockRequest",
+        {
+          // Use PascalCase keys to match BE DTO names explicitly
+          VehicleId: vehicleId,
+          Quantity: qtyNum,
+          Description: restockDesc || undefined,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+            ...(currentUser?.token ? { Authorization: `Bearer ${currentUser.token}` } : {}),
+          },
+        }
+      );
+      setNotification({ type: "success", message: "Tạo yêu cầu nhập hàng thành công" });
+      setIsRestockOpen(false);
+    } catch (err: any) {
+      setNotification({ type: "error", message: err?.message || "Tạo yêu cầu thất bại" });
+    } finally {
+      setRestockSubmitting(false);
+    }
   };
 
   const handleFormSubmit = async (data: VehicleCreateUpdate) => {
@@ -616,6 +673,13 @@ export default function Products() {
                         >
                           Xóa
                         </button>
+                        <span className="text-gray-300 dark:text-gray-600">|</span>
+                        <button
+                          onClick={() => handleOpenRestock(vehicle)}
+                          className="text-sm font-medium text-brand-500 hover:text-brand-600"
+                        >
+                          Restock
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -633,6 +697,63 @@ export default function Products() {
           </div>
         )}
       </div>
+      {/* Restock Modal */}
+      {isRestockOpen && restockVehicle && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 dark:bg-gray-800">
+            <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Tạo yêu cầu nhập hàng</h3>
+            <form onSubmit={handleSubmitRestock}>
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">Xe</label>
+                  <input
+                    type="text"
+                    disabled
+                    value={`${restockVehicle.make} ${restockVehicle.model} - VIN ${restockVehicle.vin}`}
+                    className="h-10 w-full rounded-lg border border-gray-300 bg-gray-100 px-3 text-sm dark:border-gray-700 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">Số lượng</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={restockQty}
+                    onChange={(e) => setRestockQty(e.target.value)}
+                    className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-gray-400">Mô tả (tuỳ chọn)</label>
+                  <textarea
+                    value={restockDesc}
+                    onChange={(e) => setRestockDesc(e.target.value)}
+                    className="min-h-[80px] w-full rounded-lg border border-gray-300 bg-white p-3 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  />
+                </div>
+              </div>
+              <div className="mt-6 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => !restockSubmitting && setIsRestockOpen(false)}
+                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                  disabled={restockSubmitting}
+                >
+                  Huỷ
+                </button>
+                <button
+                  type="submit"
+                  disabled={restockSubmitting}
+                  className={`rounded-lg px-4 py-2 text-sm font-medium text-white ${restockSubmitting ? 'bg-brand-300' : 'bg-brand-500 hover:bg-brand-600'}`}
+                >
+                  {restockSubmitting ? 'Đang tạo...' : 'Tạo yêu cầu'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

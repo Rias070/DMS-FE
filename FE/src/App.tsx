@@ -19,6 +19,7 @@ import Customers from "./pages/Ecommerce/Customers";
 import CustomerDetails from "./pages/Ecommerce/CustomerDetails";
 import TestDrivePage from "./pages/TestDrive/TestDrivePage";
 import UserManagement from "./pages/UserManagement";
+import RestockManagement from "./pages/Restock/RestockManagement";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -81,6 +82,16 @@ export default function App() {
               element={
                 <ProtectedRoute requiredRoles={['CompanyAdmin']}>
                   <UserManagement />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Restock Management - Only for Dealer Admin/Manager */}
+            <Route 
+              path="/restock-management" 
+              element={
+                <ProtectedRoute requiredRoles={['DealerAdmin', 'DealerManager']}>
+                  <RestockManagement />
                 </ProtectedRoute>
               } 
             />

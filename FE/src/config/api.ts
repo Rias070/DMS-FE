@@ -32,6 +32,14 @@ export const API_ENDPOINTS = {
     GET_ACTIVE: `${API_BASE_URL}/dealer/active`,
     GET_BY_ID: (id: string) => `${API_BASE_URL}/dealer/${id}`,
   },
+  RESTOCK_REQUEST: {
+    BASE: `${API_BASE_URL}/RestockRequest`,
+    GET_ALL: `${API_BASE_URL}/RestockRequest`,
+    GET_ALL_FOR_DEALER: `${API_BASE_URL}/RestockRequest/dealer/requests`,
+    GET_BY_ID: (id: string) => `${API_BASE_URL}/RestockRequest/${id}`,
+    DEALER_ACCEPT: (id: string) => `${API_BASE_URL}/RestockRequest/${id}/dealer/accept`,
+    DEALER_REJECT: (id: string) => `${API_BASE_URL}/RestockRequest/${id}/dealer/reject`,
+  },
 };
 
 // Lightweight fetch-based API wrapper (axios-like minimal)
