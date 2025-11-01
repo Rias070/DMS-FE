@@ -4,7 +4,6 @@ import { useAuth } from '../../context/AuthContext';
 import TestDriveList from '../../components/testDrive/TestDriveList';
 import TestDriveApprovalList from '../../components/testDrive/TestDriveApprovalList';
 import CreateTestDriveForm from '../../components/testDrive/CreateTestDriveForm';
-import ApiDebug from '../../components/debug/ApiDebug';
 
 const TestDrivePage: React.FC = () => {
   const { hasRole } = useRole();
@@ -103,7 +102,6 @@ const TestDrivePage: React.FC = () => {
 
   return (
     <div className="test-drive-page">
-      <ApiDebug />
       {renderContent()}
     </div>
   );

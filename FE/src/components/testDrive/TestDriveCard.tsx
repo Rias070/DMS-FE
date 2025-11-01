@@ -84,7 +84,7 @@ const TestDriveCard: React.FC<TestDriveCardProps> = ({
       </div>
 
       <div className="flex justify-between items-center text-xs text-gray-500">
-        <span>Tạo bởi: {testDrive.createdByName}</span>
+        <span>Tạo bởi: {testDrive.createdByName || testDrive.createdBy || 'Chưa xác định'}</span>
         <span>{testDrive.createdAt ? new Date(testDrive.createdAt).toLocaleDateString('vi-VN') : 'N/A'}</span>
       </div>
 
@@ -96,10 +96,10 @@ const TestDriveCard: React.FC<TestDriveCardProps> = ({
         </div>
       )}
 
-      {testDrive.status === TestDriveStatus.APPROVED && testDrive.approvedByName && (
+      {testDrive.status === TestDriveStatus.APPROVED && (
         <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded">
           <p className="text-sm text-green-700">
-            <span className="font-medium">Duyệt bởi:</span> {testDrive.approvedByName}
+            <span className="font-medium">Duyệt bởi:</span> {testDrive.approvedByName || testDrive.approvedBy || 'Chưa xác định'}
           </p>
         </div>
       )}
