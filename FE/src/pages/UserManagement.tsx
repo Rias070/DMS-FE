@@ -1,5 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PageMeta from '../components/common/PageMeta';
+import RoleGuard from '../components/auth/RoleGuard';
+import UserTable from '../components/tables/UserTable';
+import UserFormModal from '../components/form/UserFormModal';
+import UserDeleteModal from '../components/common/UserDeleteModal';
+import UserDetailModal from '../components/common/UserDetailModal';
+import { User, UpdateUserDto, Role } from '../types/user';
+import { userService } from '../services/userService';
+import { useNotification } from '../hooks/useNotification';
 
 interface CreateUserFormData {
   username: string;
@@ -8,13 +16,25 @@ interface CreateUserFormData {
   email: string;
   phone: string;
   address: string;
-  role: string;
+  contactPerson: string;
+  roleIds: string[];
   dealerId?: string;
 }
 
 const UserManagement: React.FC = () => {
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  // State management
+  const [users, setUsers] = useState<User[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]); // will be used when backend is ready
   const [loading, setLoading] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterRole, setFilterRole] = useState<string>('');
+  const [filterStatus, setFilterStatus] = useState<string>('');
+  
   const [formData, setFormData] = useState<CreateUserFormData>({
     username: '',
     password: '',
@@ -22,53 +42,179 @@ const UserManagement: React.FC = () => {
     email: '',
     phone: '',
     address: '',
-    role: 'DealerStaff',
+    contactPerson: '',
+    roleIds: [],
     dealerId: ''
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const { showNotification } = useNotification();
+
+  // Fetch all users
+  const fetchUsers = async () => {
     setLoading(true);
-
     try {
-      const response = await fetch('/api/Auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to create user: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      console.log('User created successfully:', result);
-      alert('User created successfully!');
-      setShowCreateForm(false);
-      setFormData({
-        username: '',
-        password: '',
-        name: '',
-        email: '',
-        phone: '',
-        address: '',
-        role: 'DealerStaff',
-        dealerId: ''
-      });
+      const data = await userService.getAll();
+      setUsers(data);
     } catch (error) {
-      console.error('Error creating user:', error);
-      alert(`Error creating user: ${error instanceof Error ? error.message : String(error)}`);
+      showNotification(error instanceof Error ? error.message : 'Failed to fetch users', 'error');
+      console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (field: keyof CreateUserFormData, value: string) => {
+  // Fetch all roles
+  const fetchRoles = async () => {
+    try {
+      const data = await userService.getRoles();
+      setRoles(data);
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+    }
+  };
+
+  // Fetch users on component mount
+  useEffect(() => {
+    fetchUsers();
+    fetchRoles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Handle create user
+  const handleCreateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      await userService.create(formData);
+      showNotification('User created successfully!', 'success');
+      setShowCreateForm(false);
+      resetCreateForm();
+      fetchUsers(); // Refresh list
+    } catch (error) {
+      showNotification(error instanceof Error ? error.message : 'Failed to create user', 'error');
+      console.error('Error creating user:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle edit user
+  const handleEditSubmit = async (data: UpdateUserDto) => {
+    if (!selectedUser) return;
+    
+    setLoading(true);
+    try {
+      await userService.update(selectedUser.id, data);
+      showNotification('User updated successfully!', 'success');
+      setShowEditModal(false);
+      setSelectedUser(null);
+      fetchUsers(); // Refresh list
+    } catch (error) {
+      showNotification(error instanceof Error ? error.message : 'Failed to update user', 'error');
+      console.error('Error updating user:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle delete user
+  const handleDeleteConfirm = async () => {
+    if (!selectedUser) return;
+
+    setLoading(true);
+    try {
+      await userService.delete(selectedUser.id);
+      showNotification('User deleted successfully!', 'success');
+      setShowDeleteModal(false);
+      setSelectedUser(null);
+      fetchUsers(); // Refresh list
+    } catch (error) {
+      showNotification(error instanceof Error ? error.message : 'Failed to delete user', 'error');
+      console.error('Error deleting user:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle toggle user status
+  const handleToggleStatus = async (user: User) => {
+    setLoading(true);
+    try {
+      if (user.isActive) {
+        await userService.deactivate(user.id);
+        showNotification('User deactivated successfully!', 'success');
+      } else {
+        await userService.activate(user.id);
+        showNotification('User activated successfully!', 'success');
+      }
+      fetchUsers(); // Refresh list
+    } catch (error) {
+      showNotification(error instanceof Error ? error.message : 'Failed to update user status', 'error');
+      console.error('Error toggling user status:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Modal handlers
+  const handleEdit = (user: User) => {
+    setSelectedUser(user);
+    setShowEditModal(true);
+  };
+
+  const handleDelete = (user: User) => {
+    setSelectedUser(user);
+    setShowDeleteModal(true);
+  };
+
+  const handleView = (user: User) => {
+    setSelectedUser(user);
+    setShowDetailModal(true);
+  };
+
+  // Form handlers
+  const handleInputChange = (field: keyof CreateUserFormData, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const handleRoleToggle = (roleId: string) => {
+    setFormData(prev => {
+      const roleIds = prev.roleIds.includes(roleId)
+        ? prev.roleIds.filter(id => id !== roleId)
+        : [...prev.roleIds, roleId];
+      return { ...prev, roleIds };
+    });
+  };
+
+  const resetCreateForm = () => {
+    setFormData({
+      username: '',
+      password: '',
+      name: '',
+      email: '',
+      phone: '',
+      address: '',
+      contactPerson: '',
+      roleIds: [],
+      dealerId: ''
+    });
+  };
+
+  // Filter users based on search and filters
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = 
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesRole = !filterRole || user.roles.some(r => r.roleName === filterRole);
+      const matchesStatus = !filterStatus || 
+      (filterStatus === 'active' && user.isActive) || 
+      (filterStatus === 'inactive' && !user.isActive);
+    
+    return matchesSearch && matchesRole && matchesStatus;
+  });
 
   return (
     <>
@@ -76,7 +222,31 @@ const UserManagement: React.FC = () => {
         title="Manage Users | DMS"
         description="Manage user accounts and permissions"
       />
-      <div className="p-6 max-w-7xl mx-auto">
+      
+      <RoleGuard 
+        roles={['CompanyAdmin']}
+        fallback={
+          <div className="p-6 max-w-7xl mx-auto">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-8 text-center">
+              <div className="flex justify-center mb-4">
+                <svg className="w-16 h-16 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-red-800 dark:text-red-300 mb-2">
+                Access Denied
+              </h2>
+              <p className="text-red-700 dark:text-red-400 mb-4">
+                You do not have permission to access this page.
+              </p>
+              <p className="text-sm text-red-600 dark:text-red-500">
+                This feature is only available for <span className="font-semibold">Company Administrators</span>.
+              </p>
+            </div>
+          </div>
+        }
+      >
+        <div className="p-6 max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex justify-between items-center">
@@ -92,8 +262,70 @@ const UserManagement: React.FC = () => {
               onClick={() => setShowCreateForm(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              Add new user
+              <span className="flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add New User
+              </span>
             </button>
+          </div>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Search */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Search
+              </label>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by name, username, or email..."
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+
+            {/* Filter by Role */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Filter by Role
+              </label>
+              <select
+                value={filterRole}
+                onChange={(e) => setFilterRole(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="">All Roles</option>
+                {roles.map(role => (
+                  <option key={role.id} value={role.roleName}>{role.roleName}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Filter by Status */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Filter by Status
+              </label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Results count */}
+          <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+            Showing {filteredUsers.length} of {users.length} users
           </div>
         </div>
 
@@ -104,7 +336,7 @@ const UserManagement: React.FC = () => {
               Create New User
             </h2>
             
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleCreateSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Username */}
                 <div>
@@ -176,22 +408,17 @@ const UserManagement: React.FC = () => {
                   />
                 </div>
 
-                {/* Role */}
+                {/* Contact Person */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Role *
+                    Contact Person
                   </label>
-                  <select
-                    value={formData.role}
-                    onChange={(e) => handleInputChange('role', e.target.value)}
+                  <input
+                    type="text"
+                    value={formData.contactPerson}
+                    onChange={(e) => handleInputChange('contactPerson', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                    required
-                  >
-                    <option value="DealerStaff">Dealer Staff</option>
-                    <option value="DealerAdmin">Dealer Admin</option>
-                    <option value="CompanyStaff">Company Staff</option>
-                    <option value="CompanyAdmin">Company Admin</option>
-                  </select>
+                  />
                 </div>
               </div>
 
@@ -209,18 +436,41 @@ const UserManagement: React.FC = () => {
                 />
               </div>
 
+              {/* Roles */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Roles *
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {roles.map(role => (
+                    <label key={role.id} className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.roleIds.includes(role.id)}
+                        onChange={() => handleRoleToggle(role.id)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{role.roleName}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
               {/* Form Actions */}
               <div className="flex justify-end space-x-4 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowCreateForm(false)}
+                  onClick={() => {
+                    setShowCreateForm(false);
+                    resetCreateForm();
+                  }}
                   className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || formData.roleIds.length === 0}
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Creating...' : 'Create User'}
@@ -230,33 +480,52 @@ const UserManagement: React.FC = () => {
           </div>
         )}
 
-        {/* Content Placeholder */}
-        <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-sm">
-          <div className="text-center">
-            <div className="mx-auto w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              Manage Users
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              This page will contain user management functionality.
-            </p>
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 max-w-md mx-auto">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-blue-800 dark:text-blue-200 text-sm">
-                  Coming soon - User CRUD operations will be implemented here
-                </span>
-              </div>
-            </div>
-          </div>
+        {/* Users Table */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+          <UserTable
+            users={filteredUsers}
+            loading={loading}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onView={handleView}
+            onToggleStatus={handleToggleStatus}
+          />
         </div>
+
+        {/* Modals */}
+        <UserFormModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedUser(null);
+          }}
+          onSubmit={handleEditSubmit}
+          user={selectedUser}
+          roles={roles}
+          loading={loading}
+        />
+
+        <UserDeleteModal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setSelectedUser(null);
+          }}
+          onConfirm={handleDeleteConfirm}
+          user={selectedUser}
+          loading={loading}
+        />
+
+        <UserDetailModal
+          isOpen={showDetailModal}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedUser(null);
+          }}
+          user={selectedUser}
+        />
       </div>
+      </RoleGuard>
     </>
   );
 };
