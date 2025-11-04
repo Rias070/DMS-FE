@@ -3,9 +3,10 @@ import { RestockRequest, RestockRequestStatus } from '../../types/restockRequest
 
 interface RestockApprovalActionsProps {
   request: RestockRequest;
-  onApprove: (id: string) => void;
-  onReject: (id: string, reason: string) => void;
+  onApprove?: (id: string) => void;
+  onReject?: (id: string, reason: string) => void;
   isLoading?: boolean;
+  isCompanyLevel?: boolean; // If true, this is for company approval (Escalated status)
 }
 
 const RestockApprovalActions: React.FC<RestockApprovalActionsProps> = ({
@@ -13,6 +14,7 @@ const RestockApprovalActions: React.FC<RestockApprovalActionsProps> = ({
   onApprove,
   onReject,
   isLoading = false,
+  isCompanyLevel = false,
 }) => {
   const [showRejectModal, setShowRejectModal] = React.useState(false);
 
@@ -30,15 +32,36 @@ const RestockApprovalActions: React.FC<RestockApprovalActionsProps> = ({
   // If acceptenceLevel is "Company", it means dealer already approved and sent to company
   const isEscalatedToCompany = request.acceptenceLevel === 'Company' || request.acceptenceLevel === 'company';
   
-  // Only allow approve/reject when:
-  // 1. Status is Pending AND
-  // 2. Not yet escalated to company level (acceptenceLevel is not "Company")
-  const isPending = (currentStatus === RestockRequestStatus.Pending || currentStatus === 'Pending') && !isEscalatedToCompany;
-  const canApprove = isPending;
-  const canReject = isPending;
+  // For company level: can approve/reject when status is Escalated OR acceptenceLevel is Company
+  // For dealer level: can approve/reject when status is Pending and not escalated
+  let canApprove = false;
+  let canReject = false;
+  
+  if (isCompanyLevel) {
+    // Company can approve/reject when:
+    // 1. Status is Escalated, OR
+    // 2. acceptenceLevel is Company (meaning dealer already approved and sent to company)
+    const isWaitingForCompany = 
+      (currentStatus === RestockRequestStatus.Escalated || currentStatus === 'Escalated') ||
+      isEscalatedToCompany;
+    
+    canApprove = isWaitingForCompany && !!onApprove;
+    canReject = isWaitingForCompany && !!onReject;
+  } else {
+    // Dealer can approve/reject when status is Pending and not yet escalated
+    const isPending = (currentStatus === RestockRequestStatus.Pending || currentStatus === 'Pending') && !isEscalatedToCompany;
+    canApprove = isPending && !!onApprove;
+    canReject = isPending && !!onReject;
+  }
 
   const handleApproveClick = () => {
-    if (window.confirm(`Bạn có chắc chắn muốn phê duyệt và gửi yêu cầu nhập hàng "${request.vehicleName}" (${request.quantity} chiếc) lên công ty không?`)) {
+    if (!onApprove) return;
+    
+    const confirmMessage = isCompanyLevel
+      ? `Bạn có chắc chắn muốn phê duyệt yêu cầu nhập hàng "${request.vehicleName}" (${request.quantity} chiếc) từ đại lý không?`
+      : `Bạn có chắc chắn muốn phê duyệt và gửi yêu cầu nhập hàng "${request.vehicleName}" (${request.quantity} chiếc) lên công ty không?`;
+    
+    if (window.confirm(confirmMessage)) {
       onApprove(request.id);
     }
   };

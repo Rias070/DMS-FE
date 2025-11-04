@@ -4,10 +4,12 @@ import RestockApprovalActions from './RestockApprovalActions';
 
 interface RestockRequestListProps {
   requests: RestockRequest[];
-  onApprove: (id: string) => void;
-  onReject: (id: string, reason: string) => void;
+  onApprove?: (id: string) => void;
+  onReject?: (id: string, reason: string) => void;
   isLoading?: boolean;
   actionLoadingId?: string | null;
+  showDealerName?: boolean; // Show dealer name column for company view
+  isCompanyLevel?: boolean; // If true, this is for company approval
 }
 
 const RestockRequestList: React.FC<RestockRequestListProps> = ({
@@ -16,6 +18,8 @@ const RestockRequestList: React.FC<RestockRequestListProps> = ({
   onReject,
   isLoading = false,
   actionLoadingId,
+  showDealerName = false,
+  isCompanyLevel = false,
 }) => {
 
   const getStatusText = (request: RestockRequest) => {
@@ -102,10 +106,11 @@ const RestockRequestList: React.FC<RestockRequestListProps> = ({
             <th className="py-3 font-medium">Xe</th>
             <th className="py-3 font-medium">Số lượng</th>
             <th className="py-3 font-medium">Mô tả</th>
+            {showDealerName && <th className="py-3 font-medium">Đại lý</th>}
             <th className="py-3 font-medium">Người tạo</th>
             <th className="py-3 font-medium">Ngày tạo</th>
             <th className="py-3 font-medium">Trạng thái</th>
-            <th className="py-3 font-medium">Thao tác</th>
+            {(onApprove || onReject) && <th className="py-3 font-medium">Thao tác</th>}
           </tr>
         </thead>
         <tbody>
@@ -125,6 +130,11 @@ const RestockRequestList: React.FC<RestockRequestListProps> = ({
                   {request.description || '-'}
                 </div>
               </td>
+              {showDealerName && (
+                <td className="py-4 text-gray-600 dark:text-gray-400">
+                  {request.dealerName || '-'}
+                </td>
+              )}
               <td className="py-4 text-gray-600 dark:text-gray-400">
                 {request.createdBy || '-'}
               </td>
@@ -142,14 +152,17 @@ const RestockRequestList: React.FC<RestockRequestListProps> = ({
                   </div>
                 )}
               </td>
-              <td className="py-4">
-                <RestockApprovalActions
-                  request={request}
-                  onApprove={onApprove}
-                  onReject={onReject}
-                  isLoading={actionLoadingId === request.id}
-                />
-              </td>
+              {(onApprove || onReject) && (
+                <td className="py-4">
+                  <RestockApprovalActions
+                    request={request}
+                    onApprove={onApprove}
+                    onReject={onReject}
+                    isLoading={actionLoadingId === request.id}
+                    isCompanyLevel={isCompanyLevel}
+                  />
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

@@ -11,7 +11,6 @@ import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import Inbox from "./pages/Inbox/Inbox";
 import { ScrollToTop } from "./components/common/ScrollToTop";
-import Home from "./pages/Dashboard/Home";
 import RoleBasedHome from "./pages/Home/RoleBasedHome";
 import Products from "./pages/Ecommerce/Products";
 import Orders from "./pages/Ecommerce/Orders";
@@ -20,9 +19,11 @@ import CustomerDetails from "./pages/Ecommerce/CustomerDetails";
 import TestDrivePage from "./pages/TestDrive/TestDrivePage";
 import UserManagement from "./pages/UserManagement";
 import RestockManagement from "./pages/Restock/RestockManagement";
+import CompanyRestockRequests from "./pages/Restock/CompanyRestockRequests";
 import { AuthProvider } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import DealerManagement from "./pages/DealerManagement";
 
 export default function App() {
   return (
@@ -76,6 +77,16 @@ export default function App() {
               } 
             />
 
+            {/* Dealer Management - Only for Company Admin */}
+            <Route 
+              path="/dealer-management" 
+              element={
+                <ProtectedRoute requiredRoles={['CompanyAdmin']}>
+                  <DealerManagement />
+                </ProtectedRoute>
+              } 
+            />
+
             {/* User Management - Only for Company Admin */}
             <Route 
               path="/user-management" 
@@ -92,6 +103,16 @@ export default function App() {
               element={
                 <ProtectedRoute requiredRoles={['DealerAdmin', 'DealerManager']}>
                   <RestockManagement />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Company Restock Requests - Only for Company Admin/Manager/Staff */}
+            <Route 
+              path="/company-restock-requests" 
+              element={
+                <ProtectedRoute requiredRoles={['CompanyAdmin', 'CompanyManager', 'CompanyStaff']}>
+                  <CompanyRestockRequests />
                 </ProtectedRoute>
               } 
             />

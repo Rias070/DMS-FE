@@ -57,10 +57,22 @@ const navItems: NavItem[] = [
     roles: ['DealerAdmin', 'DealerManager'], // Only for Dealer Admin/Manager
   },
   {
-    icon: <UserCircleIcon />,
+    icon: <img src="/images/user/user-plus-svgrepo-com.svg" alt="Manage Users" className="w-5 h-5" />,
     name: "Manage Users",
     path: "/user-management",
     roles: ['CompanyAdmin'], // Only for Company Admin
+  },
+  {
+    icon: <BoxCubeIcon />,
+    name: "Manage Dealers",
+    path: "/dealer-management",
+    roles: ['CompanyAdmin'], // Only for Company Admin
+  },
+  {
+    icon: <ListIcon />,
+    name: "Request",
+    path: "/company-restock-requests",
+    roles: ['CompanyAdmin', 'CompanyStaff'], // Only for Company Admin and Staff
   },
   {
     icon: <CalenderIcon />,

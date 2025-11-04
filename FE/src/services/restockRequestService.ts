@@ -111,6 +111,85 @@ class RestockRequestService {
       throw error;
     }
   }
+
+  // Get all restock requests for company (CompanyAdmin/CompanyManager/CompanyStaff)
+  async getAllForCompany(filters?: RestockRequestFilters): Promise<RestockRequest[]> {
+    try {
+      const queryParams = new URLSearchParams();
+      
+      if (filters?.status && filters.status !== 'all') {
+        queryParams.append('status', filters.status);
+      }
+      if (filters?.vehicleId) {
+        queryParams.append('vehicleId', filters.vehicleId);
+      }
+      if (filters?.dateFrom) {
+        queryParams.append('dateFrom', filters.dateFrom);
+      }
+      if (filters?.dateTo) {
+        queryParams.append('dateTo', filters.dateTo);
+      }
+
+      const url = `${API_ENDPOINTS.RESTOCK_REQUEST.GET_ALL_FOR_COMPANY}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch restock requests: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.data || data;
+    } catch (error) {
+      console.error('Error fetching restock requests for company:', error);
+      throw error;
+    }
+  }
+
+  // Company accept restock request (CompanyAdmin/CompanyManager)
+  async companyAccept(id: string): Promise<void> {
+    try {
+      const response = await fetch(API_ENDPOINTS.RESTOCK_REQUEST.COMPANY_ACCEPT(id), {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || `Failed to accept restock request: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error accepting restock request:', error);
+      throw error;
+    }
+  }
+
+  // Company reject restock request (CompanyAdmin/CompanyManager)
+  async companyReject(id: string, rejectReason: string): Promise<void> {
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append('rejectReason', rejectReason);
+
+      const response = await fetch(
+        `${API_ENDPOINTS.RESTOCK_REQUEST.COMPANY_REJECT(id)}?${queryParams.toString()}`,
+        {
+          method: 'POST',
+          headers: this.getAuthHeaders(),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || `Failed to reject restock request: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error rejecting restock request:', error);
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance
