@@ -69,7 +69,7 @@ class AuthService {
       const contentType = response.headers.get('content-type');
       
       if (!response.ok) {
-        let errorMessage = 'Login failed';
+        let errorMessage = 'Invalid username or password';
         
         try {
           if (contentType && contentType.includes('application/json')) {
@@ -83,25 +83,51 @@ class AuthService {
               errorMessage = errorResponse.error;
             } else if (errorResponse.errors && Array.isArray(errorResponse.errors)) {
               errorMessage = errorResponse.errors.join(', ');
+            } else if (errorResponse.data && errorResponse.data.message) {
+              errorMessage = errorResponse.data.message;
             } else {
-              errorMessage = `Server error (${response.status}): ${response.statusText}`;
+              // For 400/401 status, show login error message
+              if (response.status === 400 || response.status === 401) {
+                errorMessage = 'Invalid username or password';
+              } else {
+                errorMessage = `Server error (${response.status}): ${response.statusText}`;
+              }
             }
           } else {
-            // Handle non-JSON responses
+            // Handle non-JSON responses (HTML, text, etc.)
             const errorText = await response.text();
             console.error('Server error text:', errorText);
             
-            if (errorText.includes('BCrypt.Net') || errorText.includes('Invalid salt version')) {
+            // Check if it's Developer Exception Page and extract error message
+            if (errorText.includes('Invalid username or password')) {
+              errorMessage = 'Invalid username or password';
+            } else if (errorText.includes('BadRequestException')) {
+              // Extract message from exception in HTML
+              const messageMatch = errorText.match(/BadRequestException[:\s]+([^\n<]+)/i);
+              if (messageMatch && messageMatch[1]) {
+                errorMessage = messageMatch[1].trim();
+              } else {
+                errorMessage = 'Invalid username or password';
+              }
+            } else if (errorText.includes('BCrypt.Net') || errorText.includes('Invalid salt version')) {
               errorMessage = 'Lỗi hệ thống xác thực. Vui lòng liên hệ quản trị viên.';
             } else if (errorText.includes('500') || errorText.includes('Internal Server Error')) {
               errorMessage = 'Lỗi server nội bộ. Vui lòng thử lại sau.';
+            } else if (response.status === 400 || response.status === 401) {
+              // For 400/401, default to login error
+              errorMessage = 'Invalid username or password';
             } else {
               errorMessage = errorText || `Server error (${response.status})`;
             }
           }
         } catch (parseError) {
           console.error('Error parsing response:', parseError);
-          errorMessage = `Server error (${response.status}): ${response.statusText}`;
+          // For 400/401 status, show login error message
+          if (response.status === 400 || response.status === 401) {
+            errorMessage = 'Invalid username or password';
+          } else {
+            errorMessage = `Server error (${response.status}): ${response.statusText}`;
+          }
         }
         
         throw new Error(errorMessage);
