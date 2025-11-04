@@ -35,23 +35,46 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    // Kiểm tra xem user đã login chưa khi khởi động app
+  // Function to sync state from localStorage
+  const syncAuthState = () => {
     const currentUser = authService.getCurrentUser();
     const loggedIn = authService.isLoggedIn();
     
     if (currentUser && loggedIn) {
       setUser(currentUser);
       setIsLoggedIn(true);
+    } else {
+      setUser(null);
+      setIsLoggedIn(false);
     }
-    
+  };
+
+  useEffect(() => {
+    // Kiểm tra xem user đã login chưa khi khởi động app
+    syncAuthState();
     setLoading(false);
+  }, []);
+
+  // Listen for storage changes (when localStorage is updated from another tab/window)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'user' || e.key === 'isLoggedIn') {
+        syncAuthState();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const login = async (username: string, password: string) => {
     const userData = await authService.login({ username, password });
+    // Sync state immediately after login
     setUser(userData);
     setIsLoggedIn(true);
+    // Force a re-render by ensuring state is updated
+    // Use setTimeout to ensure state update happens in next tick
+    await new Promise(resolve => setTimeout(resolve, 0));
   };
 
   const logout = async () => {
