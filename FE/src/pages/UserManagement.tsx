@@ -9,6 +9,12 @@ import { User, UpdateUserDto, Role } from '../types/user';
 import { userService } from '../services/userService';
 import { useNotification } from '../hooks/useNotification';
 
+interface Dealer {
+  id: string;
+  name: string;
+  location: string;
+}
+
 interface CreateUserFormData {
   username: string;
   password: string;
@@ -25,6 +31,7 @@ const UserManagement: React.FC = () => {
   // State management
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]); // will be used when backend is ready
+  const [dealers, setDealers] = useState<Dealer[]>([]); // Dealer list for dropdown
   const [loading, setLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -73,10 +80,33 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  // Fetch all dealers
+  const fetchDealers = async () => {
+    try {
+      const token = localStorage.getItem('user');
+      if (!token) return;
+      
+      const user = JSON.parse(token);
+      const response = await fetch('/api/Dealer', {
+        headers: {
+          'Authorization': `Bearer ${user.token}`
+        }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setDealers(result.data || result);
+      }
+    } catch (error) {
+      console.error('Error fetching dealers:', error);
+    }
+  };
+
   // Fetch users on component mount
   useEffect(() => {
     fetchUsers();
     fetchRoles();
+    fetchDealers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -419,6 +449,26 @@ const UserManagement: React.FC = () => {
                     onChange={(e) => handleInputChange('contactPerson', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   />
+                </div>
+
+                {/* Dealer */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Dealer *
+                  </label>
+                  <select
+                    value={formData.dealerId}
+                    onChange={(e) => handleInputChange('dealerId', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    required
+                  >
+                    <option value="">Select Dealer</option>
+                    {dealers.map(dealer => (
+                      <option key={dealer.id} value={dealer.id}>
+                        {dealer.name} - {dealer.location}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

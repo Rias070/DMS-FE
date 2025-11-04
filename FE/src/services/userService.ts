@@ -73,13 +73,28 @@ class UserService {
   async create(userData: CreateUserDto): Promise<User> {
     try {
       const token = this.getToken();
+      
+      // Backend API expects 'roleId' (singular) not 'roleIds' (array)
+      // Temporary workaround: take first role from array
+      const requestBody = {
+        username: userData.username,
+        password: userData.password,
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        address: userData.address,
+        contactPerson: userData.contactPerson || '',
+        dealerId: userData.dealerId || null,
+        roleId: userData.roleIds && userData.roleIds.length > 0 ? userData.roleIds[0] : null
+      };
+      
       const response = await fetch(`${API_BASE}/Auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(userData),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
