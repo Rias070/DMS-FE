@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
@@ -15,11 +15,21 @@ export default function SignInForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const { login } = useAuth();
+  const { login, isLoggedIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const from = location.state?.from?.pathname || "/";
+
+  // Navigate when login is successful (backup navigation)
+  useEffect(() => {
+    if (isLoggedIn && !isLoading && location.pathname === '/signin') {
+      const timer = setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoggedIn, isLoading, navigate, from, location.pathname]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,10 +43,14 @@ export default function SignInForm() {
     setIsLoading(true);
     try {
       await login(username, password);
-      navigate(from, { replace: true });
+      setIsLoading(false);
+      // Navigate immediately after successful login
+      // Use setTimeout to ensure state is updated
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 100);
     } catch (error: any) {
       setError(error.message || "Login failed. Please try again.");
-    } finally {
       setIsLoading(false);
     }
   };
