@@ -9,7 +9,7 @@ class UserService {
   async getAll(): Promise<User[]> {
     try {
       const token = this.getToken();
-      const response = await fetch(`${API_BASE}/Accounts`, {
+      const response = await fetch(`${API_BASE}/Account`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -43,7 +43,7 @@ class UserService {
   async getById(id: string): Promise<User> {
     try {
       const token = this.getToken();
-      const response = await fetch(`${API_BASE}/Accounts/${id}`, {
+      const response = await fetch(`${API_BASE}/Account/${id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -120,7 +120,7 @@ class UserService {
   async update(id: string, userData: UpdateUserDto): Promise<User> {
     try {
       const token = this.getToken();
-      const response = await fetch(`${API_BASE}/Accounts/${id}`, {
+      const response = await fetch(`${API_BASE}/Account/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -152,7 +152,7 @@ class UserService {
   async delete(id: string): Promise<void> {
     try {
       const token = this.getToken();
-      const response = await fetch(`${API_BASE}/Accounts/${id}`, {
+      const response = await fetch(`${API_BASE}/Account/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -176,8 +176,8 @@ class UserService {
   async activate(id: string): Promise<void> {
     try {
       const token = this.getToken();
-      const response = await fetch(`${API_BASE}/Accounts/${id}/activate`, {
-        method: 'PUT',
+      const response = await fetch(`${API_BASE}/Account/${id}/activate`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
@@ -199,8 +199,8 @@ class UserService {
   async deactivate(id: string): Promise<void> {
     try {
       const token = this.getToken();
-      const response = await fetch(`${API_BASE}/Accounts/${id}/deactivate`, {
-        method: 'PUT',
+      const response = await fetch(`${API_BASE}/Account/${id}/deactivate`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
@@ -222,7 +222,7 @@ class UserService {
   async updateRoles(id: string, roleData: UpdateUserRolesDto): Promise<void> {
     try {
       const token = this.getToken();
-      const response = await fetch(`${API_BASE}/Accounts/${id}/roles`, {
+      const response = await fetch(`${API_BASE}/Account/${id}/roles`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -246,7 +246,7 @@ class UserService {
   async getByDealer(dealerId: string): Promise<User[]> {
     try {
       const token = this.getToken();
-      const response = await fetch(`${API_BASE}/Accounts/dealer/${dealerId}`, {
+      const response = await fetch(`${API_BASE}/Account/dealer/${dealerId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
